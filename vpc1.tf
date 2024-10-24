@@ -17,27 +17,18 @@ resource "aws_internet_gateway" "testigw" {
 }
 
 resource "aws_subnet" "public1" {
+  count=2
   
   vpc_id                  = aws_vpc.test.id
-  cidr_block              = var.public1_cidr_block
-  availability_zone       = var.azs
+  cidr_block              = element(var.public1_cidr_block,count.index)
+  availability_zone       = element(var.azs,count.index)
   map_public_ip_on_launch = true
   tags = {
-    "Name" = "${var.vpc_name}-public1"
+    "Name" = "${var.vpc_name}-public${count.index+1}"
   }
 }
 
 
-resource "aws_subnet" "public2" {
- 
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = var.public2_cidr_block
-  availability_zone       = var.azs1
-  map_public_ip_on_launch = true
-  tags = {
-    "Name" = "${var.vpc_name}-public12"
-  }
-}
 
 resource "aws_route_table" "rt" {
    vpc_id = aws_vpc.test.id
@@ -53,14 +44,12 @@ resource "aws_route_table" "rt" {
 
 
 resource "aws_route_table_association" "publicsubnet1" {
+  count=2
 
-  subnet_id      = aws_subnet.public1.id
+  subnet_id      = element(aws_subnet.public1.*.id,count.index)
   route_table_id = aws_route_table.rt.id
 }
-resource "aws_route_table_association" "publicsubnet2" {
-  subnet_id      = aws_subnet.public2.id
-  route_table_id = aws_route_table.rt.id
-}
+
 resource "aws_route" "communication" {
 
     route_table_id = aws_route_table.rt.id
@@ -93,12 +82,12 @@ resource "aws_security_group" "test-sg" {
 
 
 resource "aws_instance" "test-instance" {
-
+count =1
   ami                         = "ami-0261755bbcb8c4a84"
   key_name                    = "krishika"
   instance_type               = "t2.micro"
   vpc_security_group_ids =  [aws_security_group.test-sg.id]
-  subnet_id                   = aws_subnet.public1.id
+  subnet_id                   = aws_subnet.public1[0].id
   availability_zone           = "us-east-1a"
   private_ip = "10.20.1.5"
   associate_public_ip_address = true

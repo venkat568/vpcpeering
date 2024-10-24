@@ -18,27 +18,18 @@ resource "aws_internet_gateway" "prodigw" {
 }
 
 resource "aws_subnet" "publicsubnet1" {
+  count=2
   provider = aws.central
   vpc_id                  = aws_vpc.prod.id
-  cidr_block              = var.publicsubnet1_cidr_block
-  availability_zone       = var.azs3
+  cidr_block              = element(var.publicsubnet1_cidr_block,count.index)
+  availability_zone       = element(var.azs1,count.index)
   map_public_ip_on_launch = true
   tags = {
-    "Name" = "${var.vpc1_name}-public1"
+    "Name" = "${var.vpc1_name}-public${count.index+1}"
   }
 }
 
 
-resource "aws_subnet" "publicsubnet2" {
-  provider = aws.central
-  vpc_id                  = aws_vpc.prod.id
-  cidr_block              = var.publicsubnet2_cidr_block
-  availability_zone       = var.azs4
-  map_public_ip_on_launch = true
-  tags = {
-    "Name" = "${var.vpc1_name}-public2"
-  }
-}
 
 resource "aws_route_table" "rtable" {
   provider = aws.central
@@ -53,15 +44,12 @@ resource "aws_route_table" "rtable" {
 }
 
 resource "aws_route_table_association" "publicsubnet_1" {
+  count=2
   provider = aws.central
-  subnet_id      = aws_subnet.publicsubnet1.id
+  subnet_id      = element(aws_subnet.publicsubnet1.*.id,count.index)
   route_table_id = aws_route_table.rtable.id
 }
-resource "aws_route_table_association" "publicsubnet_2" {
-  provider = aws.central
-  subnet_id      = aws_subnet.publicsubnet2.id
-  route_table_id = aws_route_table.rtable.id
-}
+
 resource "aws_route" "communication1" {
    provider = aws.central
     route_table_id = aws_route_table.rtable.id
@@ -99,7 +87,7 @@ resource "aws_instance" "prod-instance" {
   key_name                    = "krishika"
   instance_type               = "t2.micro"
   vpc_security_group_ids =  [aws_security_group.prod-sg.id]
-  subnet_id                   = aws_subnet.publicsubnet1.id
+  subnet_id                   = aws_subnet.publicsubnet1[0].id
   availability_zone           = "us-east-2a"
   private_ip = "10.30.1.5"
   associate_public_ip_address = true

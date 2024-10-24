@@ -1,0 +1,13 @@
+
+cidr_block         = "10.20.0.0/16"
+public1_cidr_block = "10.20.1.0/24"
+public2_cidr_block = "10.20.2.0/24"
+azs                = "us-east-1a"
+azs1               = "us-east-1b"
+azs3               = "us-east-2a"
+azs4               = "us-east-2b"
+vpc_name           = "dev"
+publicsubnet1_cidr_block = "10.30.1.0/24"
+publicsubnet2_cidr_block = "10.30.2.0/24"
+cidr_block_1 = "10.30.0.0/16"
+vpc1_name = "prod"
